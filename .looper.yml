@@ -7,7 +7,7 @@ triggers:
 envs:
   global:
     variables:
-      slackChannel: "cpc-uconfig-devops"
+      slackChannel: "xyz"
       report_dir: "target/cucumber-report" # default empty, dir in workspace for upload
       report_context: "objectStorageCucumber-report"             # `default` by default, "dir" in object store used to store all this files
       report_index: "overview-features.html"                     # default, within dir
