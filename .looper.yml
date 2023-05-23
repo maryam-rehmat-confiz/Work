@@ -1,0 +1,47 @@
+tools:
+  jdk: 8
+  maven: "3.6.3"
+triggers:
+  - push: disabled
+  - pr: disabled
+envs:
+  global:
+    variables:
+      slackChannel: "cpc-uconfig-devops"
+      report_dir: "target/cucumber-report" # default empty, dir in workspace for upload
+      report_context: "objectStorageCucumber-report"             # `default` by default, "dir" in object store used to store all this files
+      report_index: "overview-features.html"                     # default, within dir
+  # dev:
+  #   variables:
+  #     CRED_USERNAME: "%{credentials.username('DevCredentials')}"
+  #     CRED_PASSWORD: "%{credentials.password('DevCredentials')}"
+flows:
+  cucumberReport:
+  - publishReport:
+      dir: ${report_dir}
+      context: ${report_context}
+      index: ${report_index}
+  default: 
+      - echo "INSIDE LOOPER FLOW"
+      - call: test
+  test:
+    try:
+      - echo "Starting Automation Suite"
+      - mvn clean test -Dcucumber.options="--tags @SmokeTestCases"
+    finally:
+      - call: cucumberReport
+      slack.postMessage:
+          message: '${JOB_NAME}: ${suite} build status - SUCCESS!!'
+          channelId: '${slackChannel}'
+          iconEmoji: ':thumbs-up-green:'
+    catch:
+      - echo "Msg from catch block"
+      - slack.postMessage:
+          message: '${JOB_NAME}: ${suite} build status - FAILED!'
+          channelId: '${slackChannel}'
+          iconEmoji: ':thumbs-down-red:'
+      - exit 1
+
+  versions:
+    - (name MAVEN VERSION)mvn -v
+    - (name JDK VERSION)java -version
